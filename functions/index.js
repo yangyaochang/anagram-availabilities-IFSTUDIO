@@ -1,5 +1,4 @@
 const functions = require('firebase-functions');
-const CronJob = require('cron').CronJob
 const axios = require('axios')
 const cors = require('cors')
 const express = require('express')
@@ -27,7 +26,13 @@ Append FloorPlanImageURL from FloorPlan request to corresponding available prope
 
 let FloorplanImageURL = {}
 
-new CronJob('0 0 */1 * * *', () => {
+app.get('/', (req, res) => {
+    fireData.ref('/').once('value', (snapshot) => {
+        res.send(snapshot.val())
+    })
+})
+
+app.post('/', (req, res) => {
     const d = new Date()
 
     return axios.get(`${url}?requestType=floorplan&apiToken=${token}&propertyCode=${propertyCode}`).catch((error) => {
@@ -61,6 +66,7 @@ new CronJob('0 0 */1 * * *', () => {
 
             availabilities.forEach(a => {
                 a['FloorplanImageURL'] = FloorplanImageURL[a.FloorplanId]
+                a.UnitImageURLs = a.UnitImageURLs[0].split(',')
             })
             
             console.log('Updated data at:' + d)
@@ -73,12 +79,6 @@ new CronJob('0 0 */1 * * *', () => {
 
             return data
         })
-    })
-}, null, true, 'America/New_York')
-
-app.get('/', (req, res) => {
-    fireData.ref('/').once('value', (snapshot) => {
-        res.send(snapshot.val())
     })
 })
 
